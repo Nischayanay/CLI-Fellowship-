@@ -1,0 +1,82 @@
+{
+    "name": "promptbrain-cli",
+    "version": "0.0.1",
+    "description": "Official CLI tool for interacting with the PromptBrain Context Engine",
+    "author": "PromptBrain",
+    "bin": {
+        "pb": "./bin/pb"
+    },
+    "homepage": "https://github.com/promptbrain/cli",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "repository": "promptbrain/cli",
+    "files": [
+        "/bin",
+        "/dist",
+        "/npm-shrinkwrap.json",
+        "/oclif.manifest.json"
+    ],
+    "dependencies": {
+        "@oclif/core": "^4.8.0",
+        "@oclif/plugin-help": "^6.2.36",
+        "@oclif/plugin-plugins": "^5.4.54",
+        "axios": "^1.6.0",
+        "chalk": "^4.1.2",
+        "fs-extra": "^11.1.1",
+        "keytar": "^7.9.0",
+        "open": "^9.1.0",
+        "tslib": "^2.6.2",
+        "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+        "@oclif/test": "^4.1.15",
+        "@types/chai": "^4",
+        "@types/fs-extra": "^11.0.4",
+        "@types/keytar": "*",
+        "@types/mocha": "^10.0.6",
+        "@types/node": "^18",
+        "@types/uuid": "^10.0.0",
+        "chai": "^4",
+        "mocha": "^11.1.0",
+        "shx": "^0.3.3",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.2.2"
+    },
+    "oclif": {
+        "bin": "pb",
+        "dirname": "pb",
+        "commands": "./dist/commands",
+        "plugins": [
+            "@oclif/plugin-help",
+            "@oclif/plugin-plugins"
+        ],
+        "topicSeparator": " ",
+        "topics": {
+            "hello": {
+                "description": "Say hello to the world and others"
+            }
+        }
+    },
+    "scripts": {
+        "build": "shx rm -rf dist && tsc -b",
+        "lint": "eslint . --ext .ts --config .eslintrc",
+        "postpack": "shx rm -f oclif.manifest.json",
+        "prepack": "npm run build && oclif manifest && oclif readme",
+        "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+        "version": "oclif readme && git add README.md"
+    },
+    "engines": {
+        "node": ">=12.0.0"
+    },
+    "bugs": "https://github.com/promptbrain/cli/issues",
+    "keywords": [
+        "oclif"
+    ],
+    "types": "dist/index.d.ts",
+    "overrides": {
+        "@oclif/plugin-plugins": {
+            "npm": "^11.6.3"
+        },
+        "js-yaml": "^4.1.1"
+    }
+}
