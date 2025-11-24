@@ -36,6 +36,18 @@ apiClient.interceptors.response.use(
     }
 );
 
+// Enhancement API types
+export interface EnhancementMetadata {
+    task_type: string;
+    confidence: number;
+    reasoning: string;
+}
+
+export interface EnhancementRequest {
+    prompt: string;
+    metadata?: EnhancementMetadata;
+}
+
 // Integration API methods
 export interface LinkStartResponse {
     auth_url: string;

@@ -1,0 +1,20 @@
+[
+    {
+        "name": "apple-minimal-ui",
+        "description": "Clean, whitespace-heavy Apple-style UI components",
+        "category": "design",
+        "content": "Use a minimal color palette with plenty of whitespace. Focus on typography and subtle shadows. Rounded corners should be consistent (e.g., 12px or 16px). Use system fonts like San Francisco or Inter."
+    },
+    {
+        "name": "custom-hover-effects",
+        "description": "Smooth, physics-based hover states for interactive elements",
+        "category": "design",
+        "content": "Implement hover effects using CSS transitions or spring animations. Scale up slightly (1.02x) and increase shadow depth. Ensure transitions are smooth (approx 200ms-300ms ease-out)."
+    },
+    {
+        "name": "clean-navbar",
+        "description": "Responsive, accessible navigation bar with blur effects",
+        "category": "design",
+        "content": "Create a sticky navbar with a backdrop-filter blur. Use a flexbox layout for links. Ensure mobile responsiveness with a hamburger menu. maintain high contrast for accessibility."
+    }
+]

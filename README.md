@@ -87,7 +87,31 @@ For detailed documentation, see [LINK_COMMANDS.md](./LINK_COMMANDS.md).
 - **Quota exceeded**: Upgrade your plan on the PromptBrain dashboard.
 - **Permission errors**: Try running with `sudo` if you have issues with global installation (though not recommended for `pb login` due to keychain access).
 
+## PB Library (Templates)
+
+PBCLI includes a template system to manage prompt templates.
+
+- `pb lib list`: List all available templates.
+- `pb lib add`: Add a new custom template.
+- `pb lib remove <name>`: Remove a custom template.
+
+See [docs/phase2-pbcli-templates.md](docs/phase2-pbcli-templates.md) for more details.
+
 ## Development
+
+### Running Tests
+```bash
+# Run all tests
+npm test
+
+# Run specific test
+npx mocha test/lib/templateLoader.test.ts
+```
+
+### Building
+```bash
+npm run build
+```
 
 Built with [oclif](https://oclif.io) and TypeScript.
 

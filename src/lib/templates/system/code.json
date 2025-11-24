@@ -1,0 +1,20 @@
+[
+    {
+        "name": "refactor-safe",
+        "description": "Step-by-step refactoring strategy ensuring zero breakage",
+        "category": "code",
+        "content": "When refactoring, always start by adding tests if they don't exist. Make small, incremental changes. Verify behavior after each change. Do not change public APIs unless necessary and documented."
+    },
+    {
+        "name": "find-errors-secure",
+        "description": "Security-focused error handling and logging pattern",
+        "category": "code",
+        "content": "Log errors with context but sanitize sensitive data (PII, secrets). Use structured logging. Ensure error messages returned to the user do not leak internal implementation details."
+    },
+    {
+        "name": "setup-supabase-cli",
+        "description": "Boilerplate for initializing Supabase in a TypeScript project",
+        "category": "code",
+        "content": "Initialize Supabase client using environment variables. Create a singleton instance. Add types for your database schema. Ensure RLS policies are enabled on all tables."
+    }
+]
