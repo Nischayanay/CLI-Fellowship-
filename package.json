@@ -1,7 +1,7 @@
 {
     "name": "promptbrain-cli",
     "version": "0.1.0",
-    "description": "Official CLI tool for interacting with the PromptBrain Context Engine",
+    "description": "CLI tool for interacting across apps and preserve context and memory, helping you save time and efforts",
     "author": "PromptBrain",
     "bin": {
         "pb": "./bin/pb"
