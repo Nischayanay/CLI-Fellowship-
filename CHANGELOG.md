@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2024-11-27
+
+### Fixed
+- **Critical**: Include `/scripts` folder in npm package to fix postinstall error
+- Users can now install without "MODULE_NOT_FOUND" error
+- Welcome message now displays correctly after installation
+
+### Changed
+- Removed problematic `version` script that required oclif CLI
+
+## [0.1.1] - 2024-11-27
+*Skipped - version bump issue*
+
 ## [0.1.0] - 2024-11-27
 
 ### Added
