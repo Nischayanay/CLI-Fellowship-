@@ -66,7 +66,7 @@
         "lint": "eslint . --ext .ts --config .eslintrc",
         "postinstall": "node scripts/postinstall.js",
         "postpack": "shx rm -f oclif.manifest.json",
-        "prepack": "npm run build && npx oclif manifest && oclif readme",
+        "prepack": "npm run build && npx oclif manifest",
         "test": "mocha --require ts-node/register 'test/**/*.test.ts'",
         "version": "oclif readme && git add README.md",
         "release": "npm run build && npm version patch && git push --follow-tags",
