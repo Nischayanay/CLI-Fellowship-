@@ -1,6 +1,6 @@
 {
     "name": "promptbrain-cli",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "CLI tool for interacting across apps and preserve context and memory, helping you save time and efforts",
     "author": "PromptBrain",
     "bin": {
@@ -69,7 +69,6 @@
         "postpack": "shx rm -f oclif.manifest.json",
         "prepack": "npm run build && npx oclif manifest",
         "test": "mocha --require ts-node/register 'test/**/*.test.ts'",
-
         "release": "npm run build && npm version patch && git push --follow-tags",
         "release:minor": "npm run build && npm version minor && git push --follow-tags",
         "release:major": "npm run build && npm version major && git push --follow-tags"
