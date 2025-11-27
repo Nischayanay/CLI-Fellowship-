@@ -21,8 +21,8 @@ describe('Backward Compatibility and Graceful Degradation', () => {
 
     describe('Property-Based Tests', () => {
         // **Feature: pbcli-phase2-orchestrator, Property 14: Backward compatibility preservation**
-        it('should behave identically to current implementation when new flags are not used', () => {
-            fc.assert(fc.property(
+        it('should behave identically to current implementation when new flags are not used', async () => {
+            await fc.assert(fc.asyncProperty(
                 fc.string({ minLength: 1, maxLength: 100 }),
                 async (prompt) => {
                     // Setup mocks for Phase-2 orchestration
@@ -114,8 +114,8 @@ describe('Backward Compatibility and Graceful Degradation', () => {
         });
 
         // **Feature: pbcli-phase2-orchestrator, Property 15: Graceful degradation**
-        it('should fall back to existing functionality when Phase-2 backend is unavailable', () => {
-            fc.assert(fc.property(
+        it('should fall back to existing functionality when Phase-2 backend is unavailable', async () => {
+            await fc.assert(fc.asyncProperty(
                 fc.string({ minLength: 1, maxLength: 100 }),
                 async (prompt) => {
                     // Setup orchestration to succeed
@@ -208,8 +208,8 @@ describe('Backward Compatibility and Graceful Degradation', () => {
         });
 
         // **Feature: pbcli-phase2-orchestrator, Property 16: Configuration resilience**
-        it('should use safe defaults and continue processing with invalid configurations', () => {
-            fc.assert(fc.property(
+        it('should use safe defaults and continue processing with invalid configurations', async () => {
+            await fc.assert(fc.asyncProperty(
                 fc.record({
                     prompt: fc.string({ minLength: 1, maxLength: 100 }),
                     invalidBudget: fc.string({ minLength: 1, maxLength: 10 }).filter(s => !['low', 'medium', 'high'].includes(s))

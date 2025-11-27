@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "projectInfo": {
+    "frameworks": [],
+    "dependencies": {
+      "@oclif/core": "^4.8.0",
+      "@oclif/plugin-help": "^6.2.36",
+      "@oclif/plugin-plugins": "^5.4.54",
+      "axios": "^1.6.0",
+      "chalk": "^4.1.2",
+      "fs-extra": "^11.1.1",
+      "keytar": "^7.9.0",
+      "open": "^9.1.0",
+      "tslib": "^2.6.2",
+      "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+      "@oclif/test": "^3.0.0",
+      "@types/chai": "^4",
+      "@types/fs-extra": "^11.0.4",
+      "@types/keytar": "*",
+      "@types/mocha": "^10.0.6",
+      "@types/node": "^18",
+      "@types/sinon": "^17.0.0",
+      "@types/uuid": "^10.0.0",
+      "chai": "^4",
+      "fast-check": "^4.3.0",
+      "mocha": "^10.8.2",
+      "shx": "^0.3.3",
+      "sinon": "^17.0.0",
+      "ts-node": "^10.9.1",
+      "typescript": "^5.2.2"
+    },
+    "packageManager": "npm",
+    "projectType": "Node.js Project",
+    "hasTypeScript": true,
+    "detectedAt": "2025-11-26T13:44:18.404Z"
+  },
+  "initializedAt": "2025-11-26T13:44:18.409Z"
+}

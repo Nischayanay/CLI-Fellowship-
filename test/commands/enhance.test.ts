@@ -24,8 +24,8 @@ describe('Enhanced Enhance Command', () => {
 
     describe('Property-Based Tests', () => {
         // **Feature: pbcli-phase2-orchestrator, Property 12: Metadata display completeness**
-        it('should display all required metadata for any successful enhancement', () => {
-            fc.assert(fc.property(
+        it('should display all required metadata for any successful enhancement', async () => {
+            await fc.assert(fc.asyncProperty(
                 fc.record({
                     prompt: fc.string({ minLength: 1, maxLength: 100 }),
                     fast: fc.boolean(),

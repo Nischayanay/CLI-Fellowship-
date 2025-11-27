@@ -7,4 +7,9 @@ export const logger = {
     error: (msg: string) => console.error(chalk.red('✖') + ' ' + msg),
     dim: (msg: string) => console.log(chalk.dim(msg)),
     log: (msg: string) => console.log(msg),
+    debug: (msg: string) => {
+        if (process.env.DEBUG || process.argv.includes('--verbose')) {
+            console.log(chalk.gray('🐛 ' + msg));
+        }
+    },
 };

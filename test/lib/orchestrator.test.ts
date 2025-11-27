@@ -12,7 +12,7 @@ describe('Orchestrator', () => {
     describe('Property-Based Tests', () => {
         // **Feature: pbcli-phase2-orchestrator, Property 9: Orchestration workflow completeness**
         it('should execute complete workflow and produce comprehensive results', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     userPrompt: fc.string({ minLength: 1, maxLength: 200 }),
                     fast: fc.boolean(),
@@ -91,7 +91,7 @@ describe('Orchestrator', () => {
 
         // **Feature: pbcli-phase2-orchestrator, Property 10: Orchestration error resilience**
         it('should handle component failures gracefully and continue with safe defaults', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     userPrompt: fc.string({ minLength: 1, maxLength: 100 }),
                     fast: fc.boolean(),
@@ -133,7 +133,7 @@ describe('Orchestrator', () => {
 
         // **Feature: pbcli-phase2-orchestrator, Property 11: Backend payload compliance**
         it('should generate payloads that match Phase-2 backend JSON contract exactly', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     userPrompt: fc.string({ minLength: 1, maxLength: 150 }),
                     fast: fc.boolean(),
@@ -188,7 +188,7 @@ describe('Orchestrator', () => {
 
         // **Feature: pbcli-phase2-orchestrator, Property 13: Prompt merging preservation**
         it('should preserve user intent while incorporating template guidance', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     userPrompt: fc.string({ minLength: 5, maxLength: 100 }),
                     fast: fc.boolean(),

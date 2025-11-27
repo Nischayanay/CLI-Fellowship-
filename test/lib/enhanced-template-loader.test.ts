@@ -63,7 +63,7 @@ describe('Enhanced Template Loader', () => {
     describe('Property-Based Tests', () => {
         // **Feature: pbcli-phase2-orchestrator, Property 4: Template resolution by name**
         it('should resolve templates by name correctly or handle errors appropriately', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     templateName: fc.string({ minLength: 1, maxLength: 50 }),
                     taskType: fc.constantFrom('coding', 'creative', 'rewrite', 'structured', 'minimal', 'research', 'general')
@@ -106,7 +106,7 @@ describe('Enhanced Template Loader', () => {
 
         // **Feature: pbcli-phase2-orchestrator, Property 5: Automatic template selection**
         it('should automatically select appropriate templates based on task type', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.constantFrom('coding', 'creative', 'rewrite', 'structured', 'minimal', 'research', 'general'),
                 async (taskType) => {
                     const result = await templateLoader.resolveTemplateForTask(taskType as TaskType);
@@ -171,8 +171,8 @@ describe('Enhanced Template Loader', () => {
         });
 
         // **Feature: pbcli-phase2-orchestrator, Property 8: Template expansion consistency**
-        it('should consistently expand templates with context and metadata', () => {
-            fc.assert(fc.property(
+        it('should consistently expand templates with context and metadata', async () => {
+            await fc.assert(fc.asyncProperty(
                 fc.record({
                     taskType: fc.constantFrom('coding', 'creative', 'rewrite', 'structured', 'minimal', 'research', 'general'),
                     confidence: fc.float({ min: 0, max: 1 }),
@@ -180,7 +180,7 @@ describe('Enhanced Template Loader', () => {
                     metadataKey: fc.string({ minLength: 1, maxLength: 20 }),
                     metadataValue: fc.string({ minLength: 1, maxLength: 50 })
                 }),
-                (input) => {
+                async (input) => {
                     const template: Template = {
                         name: 'test-template',
                         description: 'Test template',
@@ -230,7 +230,7 @@ describe('Enhanced Template Loader', () => {
 
         // **Feature: pbcli-phase2-orchestrator, Property 18: Template categorization and routing**
         it('should properly categorize templates and route based on task types', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.constantFrom('code', 'design'),
                 async (category) => {
                     const templates = await templateLoader.listTemplatesByCategory(category as 'code' | 'design');

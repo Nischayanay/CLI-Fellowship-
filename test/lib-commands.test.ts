@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 
-// Import from dist to match runtime environment
-const { templateLoader } = require('../dist/lib/templateLoader');
+// Import from src for testing
+import { templateLoader } from '../src/lib/templateLoader';
 
 const TEST_DIR = path.join(os.tmpdir(), 'pbcli-test-templates');
 const SYSTEM_DIR = path.join(TEST_DIR, 'system');

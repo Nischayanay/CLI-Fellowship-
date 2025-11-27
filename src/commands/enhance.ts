@@ -1,9 +1,12 @@
 import { Command, Args, Flags } from '@oclif/core';
 import { apiClient } from '../lib/apiClient';
 import { logger } from '../utils/logger';
-import chalk from 'chalk';
 import { detectTask, TaskDetectionResult } from '../lib/task-detector';
 import { orchestrator, OrchestrationOptions, OrchestrationResult } from '../lib/orchestrator';
+import colors from '../utils/colors';
+import progress from '../utils/progress';
+import reinforcement from '../utils/reinforcement';
+import jsonOutput from '../utils/json-output';
 
 /**
  * Display comprehensive orchestration metadata to user
@@ -11,60 +14,59 @@ import { orchestrator, OrchestrationOptions, OrchestrationResult } from '../lib/
 function displayOrchestrationMetadata(metadata: OrchestrationResult['metadata'], backendResponse: any): void {
     const confidencePercent = Math.round(metadata.task_detection.confidence * 100);
     
+    console.log('');
+    
     // Task Detection
-    logger.log(
-        chalk.cyan('🔍 Task Detected: ') + 
-        chalk.cyan.bold(metadata.task_detection.task_type) + 
-        chalk.dim(` (confidence: ${confidencePercent}%)`)
+    console.log(
+        colors.primary('🔍 Task Detected: ') + 
+        colors.highlight(metadata.task_detection.task_type) + 
+        colors.dim(` (confidence: ${confidencePercent}%)`)
     );
-    logger.dim(`💡 ${metadata.task_detection.reasoning}`);
+    console.log(colors.dim(`   💡 ${metadata.task_detection.reasoning}`));
     
     // Model Selection
-    logger.log(
-        chalk.blue('🤖 Model Selected: ') + 
-        chalk.blue.bold(metadata.model_routing.model_hint)
+    console.log(
+        colors.primary('🤖 Model Selected: ') + 
+        colors.highlight(metadata.model_routing.model_hint)
     );
-    logger.dim(`🎯 ${metadata.model_routing.reasoning}`);
+    console.log(colors.dim(`   🎯 ${metadata.model_routing.reasoning}`));
     
     // Template Usage
     if (metadata.template_used.template) {
-        logger.log(
-            chalk.green('📝 Template Applied: ') + 
-            chalk.green.bold(metadata.template_used.template.name) +
-            chalk.dim(` (${metadata.template_used.template.category})`)
+        console.log(
+            colors.success('📝 Template Applied: ') + 
+            colors.highlight(metadata.template_used.template.name) +
+            colors.dim(` (${metadata.template_used.template.category})`)
         );
-        logger.dim(`📋 ${metadata.template_used.reasoning}`);
+        console.log(colors.dim(`   📋 ${metadata.template_used.reasoning}`));
     } else {
-        logger.dim('📝 No template applied');
+        console.log(colors.dim('📝 No template applied'));
     }
     
     // Processing Time
     const processingTime = backendResponse?.metadata?.processing_time_ms || metadata.processing_time_ms;
-    logger.log(
-        chalk.magenta('⏱️  Processing Time: ') + 
-        chalk.magenta.bold(`${processingTime}ms`)
+    console.log(
+        colors.metadata('⏱️  Processing Time: ') + 
+        colors.highlight(`${processingTime}ms`)
     );
     
     // Context Sources (if available from backend)
     if (backendResponse?.metadata?.context_sources && backendResponse.metadata.context_sources.length > 0) {
-        logger.log(chalk.yellow('🔗 Context Sources:'));
-        backendResponse.metadata.context_sources.forEach((source: any) => {
-            logger.dim(`   • ${source.name || source.type} (${source.count || 1} snippets)`);
-        });
+        reinforcement.showContextSources(backendResponse.metadata.context_sources);
     }
     
-    logger.log('');  // Empty line for spacing
+    console.log('');
 }
 
 /**
  * Display enhanced prompt with clear formatting
  */
 function displayEnhancedPrompt(original: string, enhanced: string): void {
-    logger.log(chalk.bold('Original:'));
-    logger.dim(original);
-    logger.log('');
-    logger.log(chalk.bold('Enhanced:'));
-    logger.log(chalk.green(enhanced));
+    console.log(colors.heading('Original:'));
+    console.log(colors.dim(original));
+    console.log('');
+    console.log(colors.heading('Enhanced:'));
+    console.log(colors.success(enhanced));
 }
 
 export default class Enhance extends Command {
@@ -94,6 +96,9 @@ export default class Enhance extends Command {
         const { args, flags } = await this.parse(Enhance);
         const prompt = args.prompt;
 
+        // Check for JSON output mode
+        const useJson = jsonOutput.isEnabled();
+
         // Prepare orchestration options from flags
         const orchestrationOptions: OrchestrationOptions = {
             fast: flags.fast,
@@ -101,52 +106,85 @@ export default class Enhance extends Command {
             template: flags.template
         };
 
-        logger.info('Orchestrating enhancement...');
+        if (!useJson) {
+            progress.start('Orchestrating enhancement...');
+        }
 
         try {
             // Run orchestration to prepare Phase-2 payload
             const orchestrationResult = await orchestrator.orchestrate(prompt, orchestrationOptions);
 
-            // Display orchestration metadata
-            displayOrchestrationMetadata(orchestrationResult.metadata, null);
-
-            logger.info('Enhancing prompt...');
+            if (!useJson) {
+                progress.update('Enhancing prompt...');
+            }
 
             // Send Phase-2 compliant payload to backend
             const { data } = await apiClient.post('/general', orchestrationResult.payload);
 
-            logger.success('Prompt Enhanced!');
-            logger.log('');
+            if (useJson) {
+                // JSON output mode
+                jsonOutput.success({
+                    original: prompt,
+                    enhanced: data.enhanced_prompt || data.result,
+                    metadata: {
+                        task_detection: orchestrationResult.metadata.task_detection,
+                        model_routing: orchestrationResult.metadata.model_routing,
+                        template_used: orchestrationResult.metadata.template_used,
+                        processing_time_ms: data.metadata?.processing_time_ms || orchestrationResult.metadata.processing_time_ms,
+                        context_sources: data.metadata?.context_sources,
+                    },
+                });
+            } else {
+                progress.succeed('Prompt Enhanced!');
+                console.log('');
 
-            // Display enhanced prompt
-            displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
-
-            // Update metadata display with backend response
-            if (data.metadata) {
-                logger.log('');
+                // Display orchestration metadata
                 displayOrchestrationMetadata(orchestrationResult.metadata, data);
+
+                // Display enhanced prompt
+                displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
+
+                // Show reinforcement metrics if available
+                if (data.metadata) {
+                    const metrics = {
+                        processingTime: data.metadata.processing_time_ms,
+                        tokensSaved: data.metadata.tokens_saved,
+                        memoryHits: data.metadata.memory_hits,
+                        crossToolContext: data.metadata.context_sources?.map((s: any) => s.name),
+                    };
+                    reinforcement.showMetrics(metrics);
+                }
             }
 
         } catch (error) {
+            if (!useJson) {
+                progress.fail('Enhancement failed');
+            }
+
             // Enhanced error handling with fallback to Phase-1 behavior
             if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as any;
                 if (axiosError.response?.status === 404 || axiosError.response?.status === 400) {
-                    logger.warning('Phase-2 backend unavailable, falling back to Phase-1 behavior...');
-                    await this.fallbackToPhase1(prompt);
+                    if (!useJson) {
+                        logger.warning('Phase-2 backend unavailable, falling back to Phase-1 behavior...');
+                    }
+                    await this.fallbackToPhase1(prompt, useJson);
                     return;
                 }
             }
             
-            // Error handled by interceptor for other cases
-            logger.error('Enhancement failed. Please try again.');
+            if (useJson) {
+                jsonOutput.error('ENHANCEMENT_FAILED', 'Enhancement failed. Please try again.');
+            } else {
+                logger.error('Enhancement failed. Please try again.');
+            }
         }
     }
 
     /**
      * Fallback to Phase-1 behavior when Phase-2 backend is unavailable
      */
-    private async fallbackToPhase1(prompt: string): Promise<void> {
+    private async fallbackToPhase1(prompt: string, useJson: boolean = false): Promise<void> {
         try {
             // Use original Phase-1 logic
             let detection: TaskDetectionResult;
@@ -173,29 +211,41 @@ export default class Enhance extends Command {
 
             const { data } = await apiClient.post('/general', requestBody);
 
-            logger.success('Prompt Enhanced! (Phase-1 mode)');
-            logger.log('');
-            displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
-
-            // Display basic task detection info
-            const confidencePercent = Math.round(detection.confidence * 100);
-            logger.log('');
-            logger.log(
-                chalk.cyan('🔍 Task Detected: ') + 
-                chalk.cyan.bold(detection.task_type) + 
-                chalk.dim(` (confidence: ${confidencePercent}%)`)
-            );
-
-            if (data.context_sources && data.context_sources.length > 0) {
-                logger.log('');
-                logger.log(chalk.bold('Context Sources Used:'));
-                data.context_sources.forEach((source: any) => {
-                    logger.log(`  - ${source.name || source.type} (${source.count || 1} snippets)`);
+            if (useJson) {
+                jsonOutput.success({
+                    original: prompt,
+                    enhanced: data.enhanced_prompt || data.result,
+                    metadata: {
+                        task_detection: detection,
+                        phase: 1,
+                        context_sources: data.context_sources,
+                    },
                 });
+            } else {
+                logger.success('Prompt Enhanced! (Phase-1 mode)');
+                console.log('');
+                displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
+
+                // Display basic task detection info
+                const confidencePercent = Math.round(detection.confidence * 100);
+                console.log('');
+                console.log(
+                    colors.primary('🔍 Task Detected: ') + 
+                    colors.highlight(detection.task_type) + 
+                    colors.dim(` (confidence: ${confidencePercent}%)`)
+                );
+
+                if (data.context_sources && data.context_sources.length > 0) {
+                    reinforcement.showContextSources(data.context_sources);
+                }
             }
 
         } catch (fallbackError) {
-            logger.error('Both Phase-2 and Phase-1 enhancement failed. Please check your connection and try again.');
+            if (useJson) {
+                jsonOutput.error('FALLBACK_FAILED', 'Both Phase-2 and Phase-1 enhancement failed. Please check your connection and try again.');
+            } else {
+                logger.error('Both Phase-2 and Phase-1 enhancement failed. Please check your connection and try again.');
+            }
         }
     }
 }

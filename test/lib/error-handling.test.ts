@@ -24,7 +24,7 @@ describe('Error Handling and Graceful Continuation', () => {
     describe('Property-Based Tests', () => {
         // **Feature: pbcli-phase2-orchestrator, Property 19: Error handling graceful continuation**
         it('should handle component failures gracefully and continue with appropriate fallbacks', () => {
-            fc.assert(fc.property(
+            fc.assert(fc.asyncProperty(
                 fc.record({
                     prompt: fc.string({ minLength: 1, maxLength: 100 }),
                     fast: fc.boolean(),

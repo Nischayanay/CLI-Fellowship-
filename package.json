@@ -1,6 +1,6 @@
 {
     "name": "promptbrain-cli",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Official CLI tool for interacting with the PromptBrain Context Engine",
     "author": "PromptBrain",
     "bin": {
@@ -10,6 +10,7 @@
     "license": "MIT",
     "main": "dist/index.js",
     "repository": "promptbrain/cli",
+    "preferGlobal": true,
     "files": [
         "/bin",
         "/dist",
@@ -63,17 +64,27 @@
     "scripts": {
         "build": "shx rm -rf dist && tsc -b && shx mkdir -p dist/lib/templates && shx cp -r src/lib/templates/system dist/lib/templates/system",
         "lint": "eslint . --ext .ts --config .eslintrc",
+        "postinstall": "node scripts/postinstall.js",
         "postpack": "shx rm -f oclif.manifest.json",
         "prepack": "npm run build && npx oclif manifest && oclif readme",
         "test": "mocha --require ts-node/register 'test/**/*.test.ts'",
-        "version": "oclif readme && git add README.md"
+        "version": "oclif readme && git add README.md",
+        "release": "npm run build && npm version patch && git push --follow-tags",
+        "release:minor": "npm run build && npm version minor && git push --follow-tags",
+        "release:major": "npm run build && npm version major && git push --follow-tags"
     },
     "engines": {
         "node": ">=12.0.0"
     },
     "bugs": "https://github.com/promptbrain/cli/issues",
     "keywords": [
-        "oclif"
+        "oclif",
+        "cli",
+        "promptbrain",
+        "ai",
+        "prompt-engineering",
+        "context-engine",
+        "developer-tools"
     ],
     "types": "dist/index.d.ts",
     "overrides": {

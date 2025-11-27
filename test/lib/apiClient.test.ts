@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { integrationApi } from '../../dist/lib/apiClient.js';
+import { integrationApi } from '../../src/lib/apiClient';
 
 
 
