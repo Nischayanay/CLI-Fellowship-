@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Critical**: Fixed double-echo issue in signup/login prompts
+- Replaced custom prompt implementation with Node.js readline
+- Email and password inputs now display correctly without duplication
+- Improved input handling for both password (hidden) and text fields
+
 ## [0.1.3] - 2024-11-27
 
 ### Added
