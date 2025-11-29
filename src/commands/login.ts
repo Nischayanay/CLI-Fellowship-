@@ -1,13 +1,11 @@
 import { Command, Flags, ux } from '@oclif/core';
 import { logger } from '../utils/logger';
 import { auth } from '../lib/auth';
-import axios from 'axios';
+import { apiClient } from '../lib/apiClient';
 import colors from '../utils/colors';
 import progress from '../utils/progress';
 import ui from '../utils/ui';
 import * as readline from 'readline';
-
-const SUPABASE_URL = 'https://ubgmotiourmwaudgeexx.supabase.co';
 
 export default class Login extends Command {
     static description = 'Login to PromptBrain using Email and Password';
@@ -36,14 +34,10 @@ export default class Login extends Command {
         progress.start('Authenticating...');
 
         try {
-            const response = await axios.post(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+            // Login via backend API (backend handles Supabase)
+            const response = await apiClient.post('/auth/login', {
                 email,
                 password,
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': process.env.SUPABASE_ANON_KEY || ''
-                }
             });
 
             const data = response.data;
@@ -65,17 +59,25 @@ export default class Login extends Command {
             progress.fail('Authentication failed');
             console.log('');
 
-            if (axios.isAxiosError(error)) {
-                if (error.response) {
-                    if (error.response.status === 400) {
-                        logger.error('Invalid email or password.');
-                        ui.tip('Double-check your credentials and try again.');
-                    } else {
-                        logger.error(`Login failed: ${error.response.data.error_description || error.message}`);
-                    }
+            if (error.response) {
+                const status = error.response.status;
+                const errorMsg = error.response.data?.error || error.response.data?.message || error.message;
+                
+                if (status === 401 || status === 400) {
+                    logger.error('Invalid email or password');
+                    ui.tip('Double-check your credentials and try again');
+                    console.log('');
+                    ui.tip(`New user? Run: ${colors.primary('pb signup')}`);
+                } else if (status === 404) {
+                    logger.error('Account not found');
+                    ui.tip(`Create an account: ${colors.primary('pb signup')}`);
+                } else if (status >= 500) {
+                    logger.error('Server error. Please try again later.');
                 } else {
-                    logger.error('Network error. Please check your connection.');
+                    logger.error(`Login failed: ${errorMsg}`);
                 }
+            } else if (error.request) {
+                logger.error('Network error. Please check your connection.');
             } else {
                 logger.error(`An unexpected error occurred: ${error.message}`);
             }

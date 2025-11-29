@@ -1,13 +1,11 @@
 import { Command, Flags, ux } from '@oclif/core';
 import { logger } from '../utils/logger';
 import { auth } from '../lib/auth';
-import axios from 'axios';
+import { apiClient } from '../lib/apiClient';
 import colors from '../utils/colors';
 import progress from '../utils/progress';
 import ui from '../utils/ui';
 import * as readline from 'readline';
-
-const SUPABASE_URL = 'https://ubgmotiourmwaudgeexx.supabase.co';
 
 export default class Signup extends Command {
     static description = 'Create a new PromptBrain account';
@@ -74,18 +72,11 @@ export default class Signup extends Command {
         progress.start('Creating your account...');
 
         try {
-            // Sign up with Supabase
-            const response = await axios.post(`${SUPABASE_URL}/auth/v1/signup`, {
+            // Sign up via backend API (backend handles Supabase)
+            const response = await apiClient.post('/auth/signup', {
                 email,
                 password,
-                data: {
-                    full_name: name || undefined,
-                }
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': process.env.SUPABASE_ANON_KEY || ''
-                }
+                full_name: name || undefined,
             });
 
             const data = response.data;
@@ -126,23 +117,26 @@ export default class Signup extends Command {
             progress.fail('Signup failed');
             console.log('');
 
-            if (axios.isAxiosError(error)) {
-                if (error.response) {
-                    const errorMsg = error.response.data?.msg || error.response.data?.error_description || error.message;
-                    
-                    if (error.response.status === 422 || errorMsg.includes('already registered')) {
-                        logger.error('This email is already registered');
-                        console.log('');
-                        ui.tip(`Already have an account? Run: ${colors.primary('pb login')}`);
-                    } else if (errorMsg.includes('password')) {
-                        logger.error('Password does not meet requirements');
-                        ui.tip('Use at least 8 characters with a mix of letters and numbers');
-                    } else {
-                        logger.error(`Signup failed: ${errorMsg}`);
-                    }
+            if (error.response) {
+                const errorMsg = error.response.data?.error || error.response.data?.message || error.message;
+                const status = error.response.status;
+                
+                if (status === 409 || errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
+                    logger.error('This email is already registered');
+                    console.log('');
+                    ui.tip(`Already have an account? Run: ${colors.primary('pb login')}`);
+                } else if (status === 400 && errorMsg.includes('password')) {
+                    logger.error('Password does not meet requirements');
+                    ui.tip('Use at least 8 characters with a mix of letters and numbers');
+                } else if (status === 400) {
+                    logger.error(`Invalid input: ${errorMsg}`);
+                } else if (status >= 500) {
+                    logger.error('Server error. Please try again later.');
                 } else {
-                    logger.error('Network error. Please check your connection.');
+                    logger.error(`Signup failed: ${errorMsg}`);
                 }
+            } else if (error.request) {
+                logger.error('Network error. Please check your connection.');
             } else {
                 logger.error(`An unexpected error occurred: ${error.message}`);
             }
