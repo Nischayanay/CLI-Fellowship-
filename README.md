@@ -66,11 +66,14 @@ See [UX Polish Guide](./docs/UX_POLISH.md) and [Project Detection Guide](./docs/
 ## Quick Start
 
 ```bash
+# Create a new account (first time users)
+pb signup
+
+# Or login to existing account
+pb login
+
 # Initialize your project (auto-detects frameworks)
 pb init
-
-# Login to your account
-pb login
 
 # Enhance a prompt
 pb enhance "create a React component"
@@ -85,11 +88,22 @@ PBCLI supports two authentication methods:
 
 ### Session-Based Authentication (Default)
 
+**New users:**
+```bash
+pb signup
+```
+
+Create a new account directly from the CLI. You'll be prompted for:
+- Email address
+- Password (minimum 8 characters)
+- Full name (optional)
+
+**Existing users:**
 ```bash
 pb login
 ```
 
-This will open your browser to authenticate with PromptBrain. Once logged in, your session token will be stored securely in your OS keychain.
+Login with your email and password. Your session token will be stored securely in your OS keychain.
 
 ### API Key Authentication (Recommended for CI/CD)
 
@@ -140,9 +154,34 @@ For more details, see [Update Guide](./docs/UPDATE.md).
 
 ## Commands
 
+### `pb signup`
+
+Create a new PromptBrain account directly from the CLI.
+
+```bash
+pb signup
+
+# Or provide details upfront
+pb signup --email user@example.com --name "Your Name"
+```
+
+**Features:**
+- Email validation
+- Password strength requirements (min 8 characters)
+- Optional full name
+- Automatic login after signup (if email confirmation not required)
+- Clear error messages for existing accounts
+
 ### `pb login`
 
-Logs you into the PromptBrain ecosystem.
+Login to your existing PromptBrain account.
+
+```bash
+pb login
+
+# Or provide credentials upfront
+pb login --email user@example.com
+```
 
 ### `pb whoami`
 
