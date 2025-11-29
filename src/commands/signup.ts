@@ -1,10 +1,11 @@
-import { Command, Flags } from '@oclif/core';
+import { Command, Flags, ux } from '@oclif/core';
 import { logger } from '../utils/logger';
 import { auth } from '../lib/auth';
 import axios from 'axios';
 import colors from '../utils/colors';
 import progress from '../utils/progress';
 import ui from '../utils/ui';
+import * as readline from 'readline';
 
 const SUPABASE_URL = 'https://ubgmotiourmwaudgeexx.supabase.co';
 
@@ -36,17 +37,24 @@ export default class Signup extends Command {
 
         // Collect user information
         if (!email) {
-            email = await this.prompt('Email');
+            email = await this.promptInput('Email');
         }
+
+        // Trim whitespace
+        email = email.trim();
 
         if (!this.isValidEmail(email)) {
             logger.error('Invalid email address format');
+            ui.tip('Example: user@example.com');
             process.exit(1);
         }
 
         if (!password) {
-            password = await this.prompt('Password (min 8 characters)', true);
+            password = await this.promptPassword('Password (min 8 characters)');
         }
+
+        // Trim whitespace
+        password = password.trim();
 
         if (password.length < 8) {
             logger.error('Password must be at least 8 characters long');
@@ -55,7 +63,12 @@ export default class Signup extends Command {
         }
 
         if (!name) {
-            name = await this.prompt('Full Name (optional, press Enter to skip)');
+            name = await this.promptInput('Full Name (optional, press Enter to skip)', false);
+        }
+
+        // Trim whitespace
+        if (name) {
+            name = name.trim();
         }
 
         progress.start('Creating your account...');
@@ -140,56 +153,67 @@ export default class Signup extends Command {
     }
 
     private isValidEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        // More comprehensive email validation
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        return emailRegex.test(email) && email.length <= 254;
     }
 
-    private async prompt(question: string, isPassword = false): Promise<string> {
+    private async promptInput(question: string, required: boolean = true): Promise<string> {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
         return new Promise((resolve) => {
-            const stdin = process.stdin;
-            const stdout = process.stdout;
+            rl.question(colors.primary(question + ': '), (answer) => {
+                rl.close();
+                resolve(answer || '');
+            });
+        });
+    }
 
-            stdout.write(colors.primary(question + ': '));
+    private async promptPassword(question: string): Promise<string> {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
 
-            if (isPassword) {
-                stdin.setRawMode(true);
-            }
-
-            stdin.resume();
-            stdin.setEncoding('utf8');
-
-            let input = '';
-            const onData = (char: string) => {
-                char = char.toString();
-
-                if (char === '\n' || char === '\r' || char === '\u0004') {
-                    stdin.setRawMode(false);
-                    stdin.pause();
-                    stdin.removeListener('data', onData);
-                    stdout.write('\n');
-                    resolve(input);
-                } else if (char === '\u0003') {
-                    process.exit();
-                } else if (char === '\u007f') {
-                    if (input.length > 0) {
-                        input = input.slice(0, -1);
-                        if (isPassword) {
-                            stdout.write('\b \b');
-                        } else {
-                            stdout.write('\b \b');
+        return new Promise((resolve) => {
+            // Disable echo for password
+            const stdin = process.stdin as any;
+            stdin.setRawMode(true);
+            
+            process.stdout.write(colors.primary(question + ': '));
+            
+            let password = '';
+            stdin.on('data', function onData(char: Buffer) {
+                const c = char.toString('utf8');
+                
+                switch (c) {
+                    case '\n':
+                    case '\r':
+                    case '\u0004':
+                        stdin.setRawMode(false);
+                        stdin.removeListener('data', onData);
+                        process.stdout.write('\n');
+                        rl.close();
+                        resolve(password);
+                        break;
+                    case '\u0003':
+                        process.exit();
+                        break;
+                    case '\u007f': // backspace
+                        if (password.length > 0) {
+                            password = password.slice(0, -1);
+                            process.stdout.write('\b \b');
                         }
-                    }
-                } else {
-                    input += char;
-                    if (isPassword) {
-                        stdout.write('*');
-                    } else {
-                        stdout.write(char);
-                    }
+                        break;
+                    default:
+                        password += c;
+                        process.stdout.write('*');
+                        break;
                 }
-            };
-
-            stdin.on('data', onData);
+            });
         });
     }
 }

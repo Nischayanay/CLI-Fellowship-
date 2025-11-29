@@ -5,6 +5,7 @@ import axios from 'axios';
 import colors from '../utils/colors';
 import progress from '../utils/progress';
 import ui from '../utils/ui';
+import * as readline from 'readline';
 
 const SUPABASE_URL = 'https://ubgmotiourmwaudgeexx.supabase.co';
 
@@ -26,10 +27,10 @@ export default class Login extends Command {
         console.log('');
 
         if (!email) {
-            email = await this.prompt('Email');
+            email = await this.promptInput('Email');
         }
         if (!password) {
-            password = await this.prompt('Password', true);
+            password = await this.promptPassword('Password');
         }
 
         progress.start('Authenticating...');
@@ -82,52 +83,62 @@ export default class Login extends Command {
         }
     }
 
-    private async prompt(question: string, isPassword = false): Promise<string> {
+    private async promptInput(question: string): Promise<string> {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
         return new Promise((resolve) => {
-            const stdin = process.stdin;
-            const stdout = process.stdout;
+            rl.question(colors.primary(question + ': '), (answer) => {
+                rl.close();
+                resolve(answer || '');
+            });
+        });
+    }
 
-            stdout.write(colors.primary(question + ': '));
+    private async promptPassword(question: string): Promise<string> {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
 
-            if (isPassword) {
-                stdin.setRawMode(true);
-            }
-
-            stdin.resume();
-            stdin.setEncoding('utf8');
-
-            let input = '';
-            const onData = (char: string) => {
-                char = char.toString();
-
-                if (char === '\n' || char === '\r' || char === '\u0004') {
-                    stdin.setRawMode(false);
-                    stdin.pause();
-                    stdin.removeListener('data', onData);
-                    stdout.write('\n');
-                    resolve(input);
-                } else if (char === '\u0003') {
-                    process.exit();
-                } else if (char === '\u007f') {
-                    if (input.length > 0) {
-                        input = input.slice(0, -1);
-                        if (isPassword) {
-                            stdout.write('\b \b');
-                        } else {
-                            stdout.write('\b \b');
+        return new Promise((resolve) => {
+            // Disable echo for password
+            const stdin = process.stdin as any;
+            stdin.setRawMode(true);
+            
+            process.stdout.write(colors.primary(question + ': '));
+            
+            let password = '';
+            stdin.on('data', function onData(char: Buffer) {
+                const c = char.toString('utf8');
+                
+                switch (c) {
+                    case '\n':
+                    case '\r':
+                    case '\u0004':
+                        stdin.setRawMode(false);
+                        stdin.removeListener('data', onData);
+                        process.stdout.write('\n');
+                        rl.close();
+                        resolve(password);
+                        break;
+                    case '\u0003':
+                        process.exit();
+                        break;
+                    case '\u007f': // backspace
+                        if (password.length > 0) {
+                            password = password.slice(0, -1);
+                            process.stdout.write('\b \b');
                         }
-                    }
-                } else {
-                    input += char;
-                    if (isPassword) {
-                        stdout.write('*');
-                    } else {
-                        stdout.write(char);
-                    }
+                        break;
+                    default:
+                        password += c;
+                        process.stdout.write('*');
+                        break;
                 }
-            };
-
-            stdin.on('data', onData);
+            });
         });
     }
 }
