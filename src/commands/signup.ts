@@ -121,7 +121,14 @@ export default class Signup extends Command {
                 const errorMsg = error.response.data?.error || error.response.data?.message || error.message;
                 const status = error.response.status;
                 
-                if (status === 409 || errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
+                if (status === 404) {
+                    logger.error('Backend endpoint not found');
+                    console.log('');
+                    console.log(colors.dim('The signup endpoint is not yet implemented on the backend.'));
+                    console.log(colors.dim('Required: POST /auth/signup'));
+                    console.log('');
+                    ui.tip('See docs/BACKEND_AUTH_API.md for implementation details');
+                } else if (status === 409 || errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
                     logger.error('This email is already registered');
                     console.log('');
                     ui.tip(`Already have an account? Run: ${colors.primary('pb login')}`);
@@ -138,7 +145,13 @@ export default class Signup extends Command {
             } else if (error.request) {
                 logger.error('Network error. Please check your connection.');
             } else {
-                logger.error(`An unexpected error occurred: ${error.message}`);
+                logger.error(`An unexpected error occurred: ${error.message || JSON.stringify(error)}`);
+                console.log('');
+                console.log(colors.dim('Debug info:'));
+                console.log(colors.dim(`Error type: ${error.constructor.name}`));
+                if (error.config?.url) {
+                    console.log(colors.dim(`URL: ${error.config.url}`));
+                }
             }
             
             console.log('');
