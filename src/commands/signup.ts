@@ -73,7 +73,7 @@ export default class Signup extends Command {
 
         try {
             // Sign up via backend API (backend handles Supabase)
-            const response = await apiClient.post('/auth/signup', {
+            const response = await apiClient.post('/api/auth/signup', {
                 email,
                 password,
                 full_name: name || undefined,

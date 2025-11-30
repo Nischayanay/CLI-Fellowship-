@@ -99,17 +99,11 @@ export const auth = {
         if (!session?.refresh_token) return null;
 
         try {
-            const response = await axios.post(
-                `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
-                { refresh_token: session.refresh_token },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': process.env.SUPABASE_ANON_KEY || ''
-                    },
-                    timeout: 10000
-                }
-            );
+            // Use backend API for token refresh
+            const { apiClient } = await import('./apiClient');
+            const response = await apiClient.post('/api/auth/refresh', {
+                refresh_token: session.refresh_token
+            });
 
             const data = response.data;
             const newSession: Session = {

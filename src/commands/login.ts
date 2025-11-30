@@ -35,7 +35,7 @@ export default class Login extends Command {
 
         try {
             // Login via backend API (backend handles Supabase)
-            const response = await apiClient.post('/auth/login', {
+            const response = await apiClient.post('/api/auth/login', {
                 email,
                 password,
             });
