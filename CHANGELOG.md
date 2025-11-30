@@ -5,20 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.5] - 2024-11-30
+
+### Added
+- ✅ **Working signup and login!** Backend integration complete
+- Secure backend proxy pattern for authentication
 
 ### Changed
-- **BREAKING**: Signup/login now use backend API proxy instead of direct Supabase calls
+- **BREAKING**: Auth endpoints now at `/api/auth/*` instead of `/auth/*`
+- Signup/login use backend API proxy instead of direct Supabase calls
 - Removed Supabase credentials from CLI (more secure)
-- Backend now handles all authentication (requires backend endpoints)
+- Backend handles all authentication with proper error handling
+
+### Fixed
+- Token refresh now uses backend API
+- Improved error messages for auth failures
+- Better handling of duplicate email errors
 
 ### Security
 - ✅ No Supabase keys exposed in CLI code
 - ✅ Backend proxy pattern for authentication
 - ✅ Rate limiting and validation handled server-side
+- ✅ Service role key stays server-side only
 
 ### Documentation
-- Added `docs/BACKEND_AUTH_API.md` with required endpoint specifications
+- Added `docs/BACKEND_AUTH_API.md` with endpoint specifications
+- Added `SECURITY_AUDIT_REPORT.md` with complete security analysis
+- Added `TODO_BEFORE_PUBLISH.md` with deployment checklist
 
 ## [0.1.4] - 2024-11-27
 
