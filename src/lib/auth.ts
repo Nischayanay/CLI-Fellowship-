@@ -101,7 +101,7 @@ export const auth = {
         try {
             // Use backend API for token refresh
             const { apiClient } = await import('./apiClient');
-            const response = await apiClient.post('/api/auth/refresh', {
+            const response = await apiClient.post('/auth/refresh', {
                 refresh_token: session.refresh_token
             });
 

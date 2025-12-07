@@ -2,6 +2,7 @@ import { Command, Flags, ux } from '@oclif/core';
 import { logger } from '../utils/logger';
 import { auth } from '../lib/auth';
 import { apiClient } from '../lib/apiClient';
+import { apiKeyStorage } from '../lib/apiKeyStorage';
 import colors from '../utils/colors';
 import progress from '../utils/progress';
 import ui from '../utils/ui';
@@ -35,7 +36,7 @@ export default class Login extends Command {
 
         try {
             // Login via backend API (backend handles Supabase)
-            const response = await apiClient.post('/api/auth/login', {
+            const response = await apiClient.post('/auth/login', {
                 email,
                 password,
             });
@@ -49,6 +50,18 @@ export default class Login extends Command {
                 user_id: data.user.id,
                 email: data.user.email,
             });
+
+            // Fetch and store API key for integration endpoints
+            try {
+                const apiKeyResponse = await apiClient.get('/auth/api-key');
+                if (apiKeyResponse.data?.key) {
+                    await apiKeyStorage.storeKey(apiKeyResponse.data.id, apiKeyResponse.data.key);
+                    logger.debug('API key stored successfully');
+                }
+            } catch (apiKeyError: any) {
+                // Non-fatal: user can still use CLI without API key for basic operations
+                logger.debug(`Could not fetch API key: ${apiKeyError.message}`);
+            }
 
             progress.succeed(`Logged in as ${data.user.email}`);
             console.log('');

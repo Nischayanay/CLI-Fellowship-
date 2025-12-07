@@ -6,7 +6,8 @@ import { createError, ErrorCode, PBError } from '../utils/errors';
 import dns from 'dns/promises';
 import { apiKeyStorage } from './apiKeyStorage';
 
-const BASE_URL = 'https://promptbrain-context-engine.vercel.app';
+// Support localhost for development/testing
+const BASE_URL = process.env.PB_API_URL || 'https://promptbrain-context-engine.vercel.app';
 const DEFAULT_TIMEOUT = 15000; // 15s timeout
 const CONNECTIVITY_CACHE_TTL = 30000; // 30 seconds
 
@@ -114,10 +115,10 @@ apiClient.interceptors.request.use(async (config) => {
         return config;
     }
     
-    // 2. Fallback to session token
-    const token = await auth.ensureValidToken();
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // 2. Fallback to session token (load directly, don't refresh here to avoid circular calls)
+    const session = await auth.loadSession();
+    if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
         logger.debug(`[API] ${config.method?.toUpperCase()} ${config.url} (using session token)`);
         return config;
     }
@@ -268,15 +269,9 @@ export async function request<T = any>(
     body?: any,
     options: RequestOptions = {}
 ): Promise<T> {
-    // Check connectivity before making request
-    const isOnline = await checkConnectivity();
-    if (!isOnline) {
-        throw createError(
-            'No internet connection. Please check your network.',
-            ErrorCode.ECONN
-        );
-    }
-
+    // Skip preemptive connectivity check - let the request fail naturally
+    // and check connectivity only if there's a network error
+    
     const fn = async () => {
         const response = await apiClient.request<T>({
             method,
@@ -409,7 +404,9 @@ export const integrationApi = {
 
     listIntegrations: async (cliSession?: string): Promise<Integration[]> => {
         const params = cliSession ? { cli_session: cliSession } : {};
-        return request('GET', '/integrations/list', undefined, { params });
+        const response = await request('GET', '/integrations/list', undefined, { params });
+        // Backend returns {integrations: [...]} but we need just the array
+        return (response as any).integrations || response;
     },
 
     getSyncProgress: async (provider: string): Promise<SyncProgress> => {
