@@ -119,7 +119,7 @@ export default class Enhance extends Command {
             }
 
             // Send Phase-2 compliant payload to backend
-            const { data } = await apiClient.post('/general', orchestrationResult.payload);
+            const { data } = await apiClient.post('/api/enhance', { prompt });
 
             if (useJson) {
                 // JSON output mode
