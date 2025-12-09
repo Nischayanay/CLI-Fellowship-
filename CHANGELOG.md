@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-12-07
+
+### Added
+- ✅ **Complete OAuth Integration Flow** - Notion linking fully operational
+- ✅ **RAG-Powered Prompt Enhancement** - Context from linked apps enhances prompts
+- ✅ **Graph Visualization** - Interactive D3.js web viewer for context graph
+- ✅ **Database Migrations** - Complete schema for cli_sessions and linked_apps
+- ✅ **API Key Storage** - Automatic API key generation and storage on login
+- Testing tools: graph viewer, sync status checker, test scripts
+
+### Changed
+- Auth endpoints reverted to `/auth/*` (from `/api/auth/*`)
+- Enhanced command now uses `/api/enhance` endpoint for RAG integration
+- Integration list response parsing handles `{integrations:[]}` format
+
+### Fixed
+- OAuth callback now saves to correct user_id (not hardcoded test user)
+- Database schema matches backend expectations (all required columns)
+- RLS policies allow API key authentication
+- CLI detects integration completion correctly
+
 ## [0.1.5] - 2024-11-30
 
 ### Added
