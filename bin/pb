@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 async function main() {
-  const { run } = await import('@oclif/core')
-  await run()
+  const { main: runPremiumCLI } = await import('../dist/cli-runner.js')
+  await runPremiumCLI()
 }
 
-main()
+main().catch((error) => {
+  console.error('Failed to start PromptBrain CLI:', error.message || error);
+  process.exit(1);
+})

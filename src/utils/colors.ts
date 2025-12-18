@@ -1,16 +1,27 @@
 import chalk from 'chalk';
 
 /**
- * Official PromptBrain Color Palette
- * Based on color psychology for optimal developer experience
+ * Premium PromptBrain Color Palette
+ * Amber-centric premium branding for confident developers
  */
 export const PALETTE = {
-  primary: '#38C9D6',    // Soft Cyan - Important information
-  success: '#33E0A1',    // Mint Green - Success messages, progress
-  warning: '#F5C04D',    // Amber - Warnings (non-threatening)
-  error: '#E65C5C',      // Soft Red - Errors (non-hostile)
-  metadata: '#9BA3AF',   // Stone Grey - Secondary information
-  neutral: '#FFFFFF',    // White - Neutral text
+  // Premium Amber Brand Colors
+  primary: '#FF8C00',      // Dark Orange - Premium, confident, energizing
+  brand: '#FFA500',        // Rich Amber - Warm, approachable premium
+  accent: '#CC6600',       // Burnt Orange - Deep, sophisticated accent
+  
+  // Supporting Premium Palette
+  success: '#32CD32',      // Lime Green - Fresh achievement
+  warning: '#FFD700',      // Gold - Premium attention
+  error: '#DC143C',        // Crimson - Clear but not harsh
+  metadata: '#8B7355',     // Warm Gray - Sophisticated secondary
+  contrast: '#4169E1',     // Royal Blue - Premium contrast
+  neutral: '#FFFFFF',      // White - Clean text
+  
+  // Gradient Colors for Effects
+  gradientStart: '#FF8C00',
+  gradientMid: '#FFA500', 
+  gradientEnd: '#FFD700',
 } as const;
 
 /**
@@ -37,13 +48,23 @@ const SYMBOLS = {
 } as const;
 
 /**
- * Core color functions using the official palette
+ * Premium color functions using the amber-centric palette
  */
 export const colors = {
-  // Core palette colors
+  // Premium Brand Colors
   primary: (text: string): string => {
     if (!config.enabled) return text;
     return chalk.hex(PALETTE.primary)(text);
+  },
+
+  brand: (text: string): string => {
+    if (!config.enabled) return text;
+    return chalk.hex(PALETTE.brand).bold(text);
+  },
+
+  accent: (text: string): string => {
+    if (!config.enabled) return text;
+    return chalk.hex(PALETTE.accent)(text);
   },
 
   success: (text: string): string => {
@@ -69,11 +90,16 @@ export const colors = {
     return chalk.hex(PALETTE.metadata).dim(text);
   },
 
+  contrast: (text: string): string => {
+    if (!config.enabled) return text;
+    return chalk.hex(PALETTE.contrast)(text);
+  },
+
   neutral: (text: string): string => {
     return text; // No coloring for neutral text
   },
 
-  // Semantic helpers
+  // Premium Semantic Helpers
   heading: (text: string): string => {
     if (!config.enabled) return text;
     return chalk.hex(PALETTE.primary).bold(text);
@@ -81,7 +107,7 @@ export const colors = {
 
   highlight: (text: string): string => {
     if (!config.enabled) return text;
-    return chalk.hex(PALETTE.primary).bold(text);
+    return chalk.hex(PALETTE.brand).bold(text);
   },
 
   dim: (text: string): string => {
@@ -91,7 +117,32 @@ export const colors = {
 
   code: (text: string): string => {
     if (!config.enabled) return text;
-    return chalk.hex(PALETTE.primary).italic(text);
+    return chalk.hex(PALETTE.contrast).italic(text);
+  },
+
+  // Premium Effects
+  gradient: (text: string): string => {
+    if (!config.enabled) return text;
+    // Simple gradient effect using different shades
+    const chars = text.split('');
+    return chars.map((char, i) => {
+      const ratio = i / (chars.length - 1);
+      if (ratio < 0.5) {
+        return chalk.hex(PALETTE.gradientStart)(char);
+      } else {
+        return chalk.hex(PALETTE.gradientEnd)(char);
+      }
+    }).join('');
+  },
+
+  glow: (text: string): string => {
+    if (!config.enabled) return text;
+    return chalk.hex(PALETTE.brand).bold.underline(text);
+  },
+
+  premium: (text: string): string => {
+    if (!config.enabled) return text;
+    return chalk.hex(PALETTE.primary).bold.italic(text);
   },
 
   // Status indicators with consistent formatting

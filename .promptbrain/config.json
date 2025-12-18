@@ -34,7 +34,78 @@
     "packageManager": "npm",
     "projectType": "Node.js Project",
     "hasTypeScript": true,
-    "detectedAt": "2025-11-26T13:44:18.404Z"
+    "detectedAt": "2025-12-15T13:14:00.051Z"
   },
-  "initializedAt": "2025-11-26T13:44:18.409Z"
+  "analysisReport": {
+    "basicInfo": {
+      "name": "promptbrain-cli",
+      "description": "CLI tool for interacting across apps and preserve context and memory, helping you save time and efforts",
+      "version": "0.1.6",
+      "author": "PromptBrain",
+      "age": "Git repository detected",
+      "linesOfCode": 18084,
+      "fileCount": 191
+    },
+    "architecture": {
+      "patterns": [
+        "API Layer"
+      ],
+      "structure": {
+        "type": "Monolithic",
+        "organization": "Source-based",
+        "depth": 5
+      },
+      "apiEndpoints": [],
+      "databases": [],
+      "deployment": []
+    },
+    "purpose": {
+      "domain": "General Purpose",
+      "category": "library",
+      "features": [
+        "authentication",
+        "api-integration"
+      ],
+      "businessLogic": [
+        "Payment Processing",
+        "Reporting"
+      ]
+    },
+    "useCases": [],
+    "techStack": {
+      "frontend": [],
+      "backend": [],
+      "database": [],
+      "devTools": [
+        "TypeScript"
+      ],
+      "deployment": [],
+      "testing": [
+        "Mocha"
+      ]
+    },
+    "complexity": {
+      "level": "Complex",
+      "score": 5,
+      "factors": {
+        "dependencies": 10,
+        "devDependencies": 15,
+        "linesOfCode": 18084,
+        "fileCount": 191
+      },
+      "maintainability": "Excellent"
+    },
+    "recommendations": [
+      {
+        "category": "Code Quality",
+        "priority": "Medium",
+        "title": "Setup Code Linting",
+        "description": "Enforce consistent code style and catch potential issues",
+        "action": "Configure ESLint with appropriate rules",
+        "impact": "Improved code consistency and quality"
+      }
+    ],
+    "generatedAt": "2025-12-15T13:14:00.085Z"
+  },
+  "initializedAt": "2025-12-15T13:14:00.086Z"
 }

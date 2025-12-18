@@ -5,6 +5,7 @@ import { configManager } from '../lib/config';
 import colors from '../utils/colors';
 import ui from '../utils/ui';
 import jsonOutput from '../utils/json-output';
+import boxes from '../utils/boxes';
 
 /**
  * Diagnostic check result
@@ -296,22 +297,27 @@ export default class Doctor extends Command {
       console.log('');
     });
 
-    // Display overall status
-    ui.divider();
+    // Display overall status with rich boxes
     console.log('');
 
     switch (result.overallStatus) {
       case 'healthy':
-        console.log(colors.statusSuccess('All systems healthy! 🎉'));
-        ui.tip('PBCLI is ready to use.');
+        console.log(boxes.success(
+          'All systems are running perfectly!\nPBCLI is ready to enhance your prompts.',
+          'System Status: Healthy'
+        ));
         break;
       case 'issues':
-        console.log(colors.statusWarning('Some issues detected'));
-        ui.headsUp('PBCLI should work, but you may experience issues.');
+        console.log(boxes.warning(
+          'Some non-critical issues were detected.\nPBCLI should work, but you may experience reduced functionality.',
+          'System Status: Issues Detected'
+        ));
         break;
       case 'critical':
-        console.log(colors.statusError('Critical issues detected'));
-        ui.headsUp('PBCLI may not work properly. Please address the issues above.');
+        console.log(boxes.error(
+          'Critical issues prevent PBCLI from working properly.\nPlease address the issues above before continuing.',
+          'System Status: Critical'
+        ));
         break;
     }
 

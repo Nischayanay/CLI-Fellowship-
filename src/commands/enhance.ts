@@ -7,6 +7,13 @@ import colors from '../utils/colors';
 import progress from '../utils/progress';
 import reinforcement from '../utils/reinforcement';
 import jsonOutput from '../utils/json-output';
+import interactive from '../utils/interactive';
+import boxes from '../utils/boxes';
+import OutputFormatter from '../utils/output-formatter';
+import PromptOptimizer from '../utils/prompt-optimizer';
+import ContextDetector from '../utils/context-detector';
+import ClipboardManager from '../utils/clipboard';
+
 
 /**
  * Display comprehensive orchestration metadata to user
@@ -90,14 +97,45 @@ export default class Enhance extends Command {
             description: 'Specify template name to use for enhancement',
             char: 't'
         }),
+        interactive: Flags.boolean({
+            description: 'Launch interactive prompt editor',
+            char: 'i',
+            default: false
+        }),
+        stream: Flags.boolean({
+            description: 'Stream the enhanced prompt in real-time',
+            default: false
+        }),
+
+        optimize: Flags.boolean({
+            description: 'Show prompt optimization analysis',
+            char: 'o',
+            default: true
+        }),
+
+        'no-copy': Flags.boolean({
+            description: 'Disable automatic clipboard copy',
+            default: false
+        }),
     };
 
     async run(): Promise<void> {
         const { args, flags } = await this.parse(Enhance);
-        const prompt = args.prompt;
+        let prompt = args.prompt;
+
+        // Interactive mode
+        if (flags.interactive) {
+            prompt = await this.runInteractiveMode();
+        }
 
         // Check for JSON output mode
         const useJson = jsonOutput.isEnabled();
+
+        // Smart prompt optimization and analysis
+        if (flags.optimize && !useJson) {
+            const optimizationResult = await this.runPromptOptimization(prompt);
+            prompt = optimizationResult.finalPrompt;
+        }
 
         // Prepare orchestration options from flags
         const orchestrationOptions: OrchestrationOptions = {
@@ -107,7 +145,7 @@ export default class Enhance extends Command {
         };
 
         if (!useJson) {
-            progress.start('Orchestrating enhancement...');
+            progress.thinking('Orchestrating enhancement...');
         }
 
         try {
@@ -115,7 +153,7 @@ export default class Enhance extends Command {
             const orchestrationResult = await orchestrator.orchestrate(prompt, orchestrationOptions);
 
             if (!useJson) {
-                progress.update('Enhancing prompt...');
+                progress.processing('Enhancing prompt...');
             }
 
             // Send Phase-2 compliant payload to backend
@@ -135,24 +173,26 @@ export default class Enhance extends Command {
                     },
                 });
             } else {
-                progress.succeed('Prompt Enhanced!');
-                console.log('');
+                progress.succeed('Enhancement Complete!');
+                
+                const enhancedPrompt = data.enhanced_prompt || data.result || 'No enhancement returned.';
+                
+                // Use new output formatter
+                this.displayEnhancedResults(
+                    prompt, 
+                    enhancedPrompt,
+                    orchestrationResult.metadata,
+                    data
+                );
 
-                // Display orchestration metadata
-                displayOrchestrationMetadata(orchestrationResult.metadata, data);
-
-                // Display enhanced prompt
-                displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
-
-                // Show reinforcement metrics if available
-                if (data.metadata) {
-                    const metrics = {
-                        processingTime: data.metadata.processing_time_ms,
-                        tokensSaved: data.metadata.tokens_saved,
-                        memoryHits: data.metadata.memory_hits,
-                        crossToolContext: data.metadata.context_sources?.map((s: any) => s.name),
-                    };
-                    reinforcement.showMetrics(metrics);
+                // Auto-copy to clipboard (unless disabled)
+                if (!flags['no-copy']) {
+                    await this.handleClipboardCopy(enhancedPrompt);
+                } else {
+                    // Show completion message without clipboard
+                    console.log('');
+                    console.log(colors.success('✓ Enhancement complete! Copy the enhanced prompt above to use it.'));
+                    console.log('');
                 }
             }
 
@@ -224,7 +264,9 @@ export default class Enhance extends Command {
             } else {
                 logger.success('Prompt Enhanced! (Phase-1 mode)');
                 console.log('');
-                displayEnhancedPrompt(prompt, data.enhanced_prompt || data.result || 'No enhancement returned.');
+                
+                const enhancedPrompt = data.enhanced_prompt || data.result || 'No enhancement returned.';
+                displayEnhancedPrompt(prompt, enhancedPrompt);
 
                 // Display basic task detection info
                 const confidencePercent = Math.round(detection.confidence * 100);
@@ -238,6 +280,12 @@ export default class Enhance extends Command {
                 if (data.context_sources && data.context_sources.length > 0) {
                     reinforcement.showContextSources(data.context_sources);
                 }
+
+                // Auto-copy to clipboard for Phase-1 fallback too
+                const { flags } = await this.parse(Enhance);
+                if (!flags['no-copy']) {
+                    await this.handleClipboardCopy(enhancedPrompt);
+                }
             }
 
         } catch (fallbackError) {
@@ -248,4 +296,150 @@ export default class Enhance extends Command {
             }
         }
     }
+
+    /**
+     * Smart prompt optimization workflow
+     */
+    private async runPromptOptimization(prompt: string): Promise<{ finalPrompt: string }> {
+        console.log('');
+        console.log(OutputFormatter.sectionHeader('Prompt Analysis', '🔍'));
+
+        // Analyze the prompt
+        const analysis = PromptOptimizer.analyzePrompt(prompt);
+        console.log(PromptOptimizer.displayAnalysis(analysis));
+
+        // Detect integrations
+        console.log('');
+        progress.start('Detecting integrations...');
+        const integrations = await ContextDetector.detectIntegrations(prompt);
+        progress.succeed('Integration detection complete');
+
+        if (integrations.length > 0) {
+            console.log('');
+            console.log(ContextDetector.displayDetectedIntegrations(integrations));
+        }
+
+        // Generate optimized prompt
+        console.log('');
+        progress.start('Optimizing prompt...');
+        const contextualPrompt = ContextDetector.enhancePromptWithContext(prompt, integrations);
+        const optimization = PromptOptimizer.optimizePrompt(contextualPrompt);
+        progress.succeed('Optimization complete');
+
+        console.log('');
+        console.log(PromptOptimizer.displayOptimization(optimization));
+
+        // Show suggestions if any
+        if (analysis.suggestions.length > 0) {
+            console.log('');
+            console.log(OutputFormatter.suggestions('Optimization Tips', analysis.suggestions));
+        }
+
+        return { finalPrompt: optimization.optimized };
+    }
+
+    /**
+     * Display enhanced results with new formatter
+     */
+    private displayEnhancedResults(
+        original: string, 
+        enhanced: string, 
+        metadata: OrchestrationResult['metadata'], 
+        backendResponse: any
+    ): void {
+        console.log('');
+        
+        // Enhanced comparison display
+        console.log(OutputFormatter.comparison(original, enhanced));
+
+        // Compact metadata display
+        const metadataInfo = {
+            'Task': `${metadata.task_detection.task_type} (${Math.round(metadata.task_detection.confidence * 100)}%)`,
+            'Model': metadata.model_routing.model_hint,
+            'Template': metadata.template_used.template?.name || 'None',
+            'Time': `${backendResponse?.metadata?.processing_time_ms || metadata.processing_time_ms}ms`,
+        };
+
+        console.log(OutputFormatter.metadataCard(metadataInfo));
+
+        // Context sources if available
+        if (backendResponse?.metadata?.context_sources && backendResponse.metadata.context_sources.length > 0) {
+            console.log('');
+            reinforcement.showContextSources(backendResponse.metadata.context_sources);
+        }
+
+        // Next action suggestions
+        console.log('');
+        console.log(OutputFormatter.suggestions('What\'s next?', [
+            'pb enhance --chat "follow-up question"',
+            'pb lib save "template-name"',
+            'pb devsync'
+        ]));
+    }
+
+
+
+    /**
+     * Interactive prompt editor mode
+     */
+    private async runInteractiveMode(): Promise<string> {
+        console.log('');
+        console.log(colors.heading('🎨 Interactive Prompt Editor'));
+        console.log('');
+
+        // Show welcome box
+        console.log(boxes.info(
+            'Welcome to the interactive prompt editor!\nYou can write multi-line prompts with rich editing features.',
+            'Interactive Mode'
+        ));
+        console.log('');
+
+        // Get the prompt
+        const prompt = await interactive.multilineInput({
+            message: 'Enter your prompt:',
+            multiline: true,
+        });
+
+        // Show preview with analysis
+        console.log('');
+        const analysis = PromptOptimizer.analyzePrompt(prompt);
+        console.log(PromptOptimizer.displayAnalysis(analysis));
+
+        // Confirm
+        const confirmed = await interactive.confirm({
+            message: 'Enhance this prompt?',
+            default: true,
+        });
+
+        if (!confirmed) {
+            console.log(colors.warning('Cancelled'));
+            process.exit(0);
+        }
+
+        return prompt;
+    }
+
+    /**
+     * Handle clipboard copy with premium notifications
+     */
+    private async handleClipboardCopy(enhancedPrompt: string): Promise<void> {
+        try {
+            const success = await ClipboardManager.copyEnhancedPrompt(enhancedPrompt, true);
+            
+            if (!success) {
+                // Show manual copy instructions
+                console.log('');
+                console.log(colors.warning('⚠️  Auto-copy failed. Please manually copy the enhanced prompt above.'));
+                console.log(colors.dim('Tip: Use --no-copy flag to disable auto-copy attempts.'));
+                console.log('');
+            }
+        } catch (error) {
+            // Graceful fallback - don't break the command if clipboard fails
+            console.log('');
+            console.log(colors.dim('📋 Clipboard not available. Enhanced prompt is ready above.'));
+            console.log('');
+        }
+    }
+
+
 }

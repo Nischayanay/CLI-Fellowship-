@@ -1,4 +1,6 @@
 import colors from './colors';
+import { PALETTE } from './colors';
+import chalk from 'chalk';
 
 /**
  * Progress state tracking
@@ -14,9 +16,16 @@ interface ProgressState {
 }
 
 /**
- * Spinner frames for smooth animation
+ * Premium spinner collections for different contexts
  */
-const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const SPINNER_FRAMES = {
+  premium: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
+  pulse: ['●', '○', '◐', '◑', '◒', '◓'],
+  wave: ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█', '▇', '▆', '▅', '▄', '▃', '▂'],
+  orbit: ['◜', '◠', '◝', '◞', '◡', '◟'],
+  brain: ['🧠', '💭', '💡', '⚡', '🔥', '✨'],
+  gradient: ['🔸', '🔶', '🟠', '🟡', '🟨', '🟩'],
+};
 
 /**
  * Progress bar characters
@@ -60,9 +69,36 @@ function write(text: string): void {
  */
 export const progress = {
   /**
-   * Start an indeterminate spinner
+   * Stream text with typing effect (like ChatGPT)
    */
-  start(message: string): void {
+  async streamText(text: string, options: { delay?: number; color?: (text: string) => string } = {}): Promise<void> {
+    const delay = options.delay || 20;
+    const colorFn = options.color || ((t: string) => t);
+    
+    for (let i = 0; i < text.length; i++) {
+      process.stdout.write(colorFn(text[i]));
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    console.log(''); // New line at end
+  },
+
+  /**
+   * Show progress with throughput metrics
+   */
+  showThroughput(processed: number, total: number, startTime: number): void {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const rate = processed / elapsed;
+    const eta = total > processed ? (total - processed) / rate : 0;
+    
+    const throughputText = `${rate.toFixed(1)}/s`;
+    const etaText = eta > 0 ? `ETA: ${Math.ceil(eta)}s` : 'Done';
+    
+    console.log(colors.dim(`  ${throughputText} • ${etaText}`));
+  },
+  /**
+   * Start premium spinner with context awareness
+   */
+  start(message: string, spinnerType: keyof typeof SPINNER_FRAMES = 'premium'): void {
     // Clean up any existing progress
     this.stop();
 
@@ -75,20 +111,39 @@ export const progress = {
 
     if (supportsCursorManipulation()) {
       let frameIndex = 0;
+      const frames = SPINNER_FRAMES[spinnerType];
       
       state.intervalId = setInterval(() => {
         if (!state || !state.active) return;
         
         clearLine();
-        const frame = SPINNER_FRAMES[frameIndex];
-        write(`${colors.primary(frame)} ${state.message}`);
+        const frame = frames[frameIndex];
+        const coloredFrame = chalk.hex(PALETTE.brand)(frame);
+        const elapsed = ((Date.now() - state.startTime) / 1000).toFixed(1);
         
-        frameIndex = (frameIndex + 1) % SPINNER_FRAMES.length;
+        write(`${coloredFrame} ${colors.metadata(state.message)} ${colors.dim(`(${elapsed}s)`)}`);
+        
+        frameIndex = (frameIndex + 1) % frames.length;
       }, 80);
     } else {
       // Fallback for terminals without cursor manipulation
-      console.log(`${colors.primary('...')} ${message}`);
+      console.log(`${colors.brand('...')} ${message}`);
     }
+  },
+
+  /**
+   * Context-aware spinners for different operations
+   */
+  thinking(message: string = 'Analyzing context...'): void {
+    this.start(message, 'brain');
+  },
+
+  processing(message: string = 'Processing...'): void {
+    this.start(message, 'gradient');
+  },
+
+  network(message: string = 'Connecting...'): void {
+    this.start(message, 'orbit');
   },
 
   /**
