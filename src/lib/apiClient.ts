@@ -5,22 +5,48 @@ import { withRetry, getRetryAfterMs } from '../utils/retry';
 import { createError, ErrorCode, PBError } from '../utils/errors';
 import dns from 'dns/promises';
 import { apiKeyStorage } from './apiKeyStorage';
+import { configManager } from './config';
 
-// Support localhost for development/testing
-const BASE_URL = process.env.PB_API_URL || 'https://promptbrain-context-engine.vercel.app';
+// Default values
 const DEFAULT_TIMEOUT = 15000; // 15s timeout
 const CONNECTIVITY_CACHE_TTL = 30000; // 30 seconds
 
 // Connectivity state cache
 let connectivityCache: { isOnline: boolean; timestamp: number } | null = null;
 
-export const apiClient = axios.create({
-    baseURL: BASE_URL,
+// Create API client with dynamic configuration
+const createApiClient = async () => {
+    const config = await configManager.load();
+    // Prioritize environment variable for development
+    const baseURL = process.env.PB_API_URL || config.api.baseUrl;
+    return axios.create({
+        baseURL,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        timeout: config.api.timeout,
+    });
+};
+
+// Initialize with default, will be updated when used
+export let apiClient = axios.create({
+    baseURL: 'https://promptbrain-context-engine.vercel.app',
     headers: {
         'Content-Type': 'application/json',
     },
     timeout: DEFAULT_TIMEOUT,
 });
+
+// Update API client with current config
+export const updateApiClient = async () => {
+    const config = await configManager.load();
+    // Prioritize environment variable for development
+    const baseURL = process.env.PB_API_URL || config.api.baseUrl;
+    
+    // Update the existing client's config
+    apiClient.defaults.baseURL = baseURL;
+    apiClient.defaults.timeout = config.api.timeout;
+};
 
 /**
  * Check network connectivity with caching
@@ -110,7 +136,7 @@ apiClient.interceptors.request.use(async (config) => {
     // 1. Try to load API key from storage first
     const apiKey = await apiKeyStorage.getActiveKey();
     if (apiKey) {
-        config.headers['x-api-key'] = apiKey;
+        config.headers.Authorization = `Bearer ${apiKey}`;
         logger.debug(`[API] ${config.method?.toUpperCase()} ${config.url} (using API key)`);
         return config;
     }

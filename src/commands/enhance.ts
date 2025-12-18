@@ -1,5 +1,5 @@
 import { Command, Args, Flags } from '@oclif/core';
-import { apiClient } from '../lib/apiClient';
+import { apiClient, updateApiClient } from '../lib/apiClient';
 import { logger } from '../utils/logger';
 import { detectTask, TaskDetectionResult } from '../lib/task-detector';
 import { orchestrator, OrchestrationOptions, OrchestrationResult } from '../lib/orchestrator';
@@ -144,6 +144,9 @@ export default class Enhance extends Command {
             template: flags.template
         };
 
+        // Update API client with current config
+        await updateApiClient();
+
         if (!useJson) {
             progress.thinking('Orchestrating enhancement...');
         }
@@ -262,23 +265,33 @@ export default class Enhance extends Command {
                     },
                 });
             } else {
-                logger.success('Prompt Enhanced! (Phase-1 mode)');
-                console.log('');
-                
                 const enhancedPrompt = data.enhanced_prompt || data.result || 'No enhancement returned.';
-                displayEnhancedPrompt(prompt, enhancedPrompt);
+                
+                // Clean enhanced prompt display
+                console.log('');
+                console.log(colors.success('Enhanced Prompt:'));
+                console.log(colors.dim('─'.repeat(60)));
+                console.log(colors.neutral(enhancedPrompt));
+                console.log(colors.dim('─'.repeat(60)));
 
-                // Display basic task detection info
-                const confidencePercent = Math.round(detection.confidence * 100);
+                // Developer metrics
+                const originalTokens = Math.ceil(prompt.split(/\s+/).length * 1.3);
+                const enhancedTokens = Math.ceil(enhancedPrompt.split(/\s+/).length * 1.3);
+                const tokensAdded = enhancedTokens - originalTokens;
+                
                 console.log('');
                 console.log(
-                    colors.primary('🔍 Task Detected: ') + 
-                    colors.highlight(detection.task_type) + 
-                    colors.dim(` (confidence: ${confidencePercent}%)`)
+                    colors.dim('Tokens: ') + colors.highlight(`${enhancedTokens}`) +
+                    (tokensAdded > 0 ? colors.success(` (+${tokensAdded})`) : colors.warning(` (saved)`)) +
+                    colors.dim(' • Task: ') + colors.highlight(detection.task_type)
                 );
 
+                // Context sources
                 if (data.context_sources && data.context_sources.length > 0) {
-                    reinforcement.showContextSources(data.context_sources);
+                    const sources = data.context_sources
+                        .map((source: any) => source.type || source.name)
+                        .join(', ');
+                    console.log(colors.dim('Context from: ') + colors.primary(sources));
                 }
 
                 // Auto-copy to clipboard for Phase-1 fallback too
@@ -298,48 +311,35 @@ export default class Enhance extends Command {
     }
 
     /**
-     * Smart prompt optimization workflow
+     * Smart prompt optimization workflow - minimal developer output
      */
     private async runPromptOptimization(prompt: string): Promise<{ finalPrompt: string }> {
-        console.log('');
-        console.log(OutputFormatter.sectionHeader('Prompt Analysis', '🔍'));
-
-        // Analyze the prompt
+        // Quick analysis without verbose output
         const analysis = PromptOptimizer.analyzePrompt(prompt);
-        console.log(PromptOptimizer.displayAnalysis(analysis));
-
-        // Detect integrations
-        console.log('');
-        progress.start('Detecting integrations...');
+        
+        // Detect integrations silently
         const integrations = await ContextDetector.detectIntegrations(prompt);
-        progress.succeed('Integration detection complete');
-
-        if (integrations.length > 0) {
-            console.log('');
-            console.log(ContextDetector.displayDetectedIntegrations(integrations));
-        }
-
+        
         // Generate optimized prompt
-        console.log('');
-        progress.start('Optimizing prompt...');
         const contextualPrompt = ContextDetector.enhancePromptWithContext(prompt, integrations);
         const optimization = PromptOptimizer.optimizePrompt(contextualPrompt);
-        progress.succeed('Optimization complete');
 
+        // Show minimal analysis info
         console.log('');
-        console.log(PromptOptimizer.displayOptimization(optimization));
-
-        // Show suggestions if any
-        if (analysis.suggestions.length > 0) {
-            console.log('');
-            console.log(OutputFormatter.suggestions('Optimization Tips', analysis.suggestions));
-        }
+        console.log(
+            colors.dim('Analysis: ') + 
+            colors.highlight(`${analysis.length} chars`) +
+            colors.dim(' • ') + 
+            colors.highlight(`~${analysis.tokenEstimate} tokens`) +
+            (analysis.detectedContexts.length > 0 ? 
+                colors.dim(' • ') + colors.primary(analysis.detectedContexts.join(', ')) : '')
+        );
 
         return { finalPrompt: optimization.optimized };
     }
 
     /**
-     * Display enhanced results with new formatter
+     * Display enhanced results - developer-focused format
      */
     private displayEnhancedResults(
         original: string, 
@@ -349,32 +349,35 @@ export default class Enhance extends Command {
     ): void {
         console.log('');
         
-        // Enhanced comparison display
-        console.log(OutputFormatter.comparison(original, enhanced));
+        // Clean enhanced prompt display
+        console.log(colors.success('Enhanced Prompt:'));
+        console.log(colors.dim('─'.repeat(60)));
+        console.log(colors.neutral(enhanced));
+        console.log(colors.dim('─'.repeat(60)));
 
-        // Compact metadata display
-        const metadataInfo = {
-            'Task': `${metadata.task_detection.task_type} (${Math.round(metadata.task_detection.confidence * 100)}%)`,
-            'Model': metadata.model_routing.model_hint,
-            'Template': metadata.template_used.template?.name || 'None',
-            'Time': `${backendResponse?.metadata?.processing_time_ms || metadata.processing_time_ms}ms`,
-        };
-
-        console.log(OutputFormatter.metadataCard(metadataInfo));
-
-        // Context sources if available
-        if (backendResponse?.metadata?.context_sources && backendResponse.metadata.context_sources.length > 0) {
-            console.log('');
-            reinforcement.showContextSources(backendResponse.metadata.context_sources);
-        }
-
-        // Next action suggestions
+        // Developer metrics in one line
+        const originalTokens = Math.ceil(original.split(/\s+/).length * 1.3);
+        const enhancedTokens = Math.ceil(enhanced.split(/\s+/).length * 1.3);
+        const tokensSaved = originalTokens < enhancedTokens ? 0 : originalTokens - enhancedTokens;
+        const tokensAdded = enhancedTokens - originalTokens;
+        
+        const processingTime = backendResponse?.metadata?.processing_time_ms || metadata.processing_time_ms;
+        
         console.log('');
-        console.log(OutputFormatter.suggestions('What\'s next?', [
-            'pb enhance --chat "follow-up question"',
-            'pb lib save "template-name"',
-            'pb devsync'
-        ]));
+        console.log(
+            colors.dim('Tokens: ') + colors.highlight(`${enhancedTokens}`) +
+            (tokensAdded > 0 ? colors.success(` (+${tokensAdded})`) : colors.warning(` (${tokensSaved} saved)`)) +
+            colors.dim(' • Time: ') + colors.highlight(`${processingTime}ms`) +
+            colors.dim(' • Task: ') + colors.highlight(metadata.task_detection.task_type)
+        );
+
+        // Context sources - show what integrations were used
+        if (backendResponse?.metadata?.context_sources && backendResponse.metadata.context_sources.length > 0) {
+            const sources = backendResponse.metadata.context_sources
+                .map((source: any) => source.type || source.name)
+                .join(', ');
+            console.log(colors.dim('Context from: ') + colors.primary(sources));
+        }
     }
 
 
