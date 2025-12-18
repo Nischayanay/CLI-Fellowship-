@@ -1,6 +1,6 @@
 {
     "name": "promptbrain-cli",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "description": "CLI tool for interacting across apps and preserve context and memory, helping you save time and efforts",
     "author": "PromptBrain",
     "bin": {
