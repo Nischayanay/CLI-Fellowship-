@@ -1,4 +1,3 @@
-import open from 'open';
 import { logger } from './logger';
 
 /**
@@ -7,6 +6,8 @@ import { logger } from './logger';
  */
 export async function openBrowser(url: string): Promise<void> {
     try {
+        // Use dynamic import for ES Module compatibility
+        const { default: open } = await import('open');
         await open(url);
     } catch (error: any) {
         logger.error(`Failed to open browser: ${error.message}`);

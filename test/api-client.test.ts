@@ -3,7 +3,7 @@ import { apiClient, request } from '../src/lib/apiClient';
 
 describe('API Client', () => {
     it('should have correct base URL', () => {
-        expect(apiClient.defaults.baseURL).to.equal('https://promptbrain-context-engine.vercel.app');
+        expect(apiClient.defaults.baseURL).to.equal('http://localhost:3000');
     });
 
     it('should attach authorization header', async () => {

@@ -36,7 +36,7 @@ export default class Login extends Command {
 
         try {
             // Login via backend API (backend handles Supabase)
-            const response = await apiClient.post('/auth/login', {
+            const response = await apiClient.post('/api/auth/login', {
                 email,
                 password,
             });
@@ -53,7 +53,7 @@ export default class Login extends Command {
 
             // Fetch and store API key for integration endpoints
             try {
-                const apiKeyResponse = await apiClient.get('/auth/api-key');
+                const apiKeyResponse = await apiClient.get('/api/auth/api-key');
                 if (apiKeyResponse.data?.key) {
                     await apiKeyStorage.storeKey(apiKeyResponse.data.id, apiKeyResponse.data.key);
                     logger.debug('API key stored successfully');
@@ -71,6 +71,9 @@ export default class Login extends Command {
         } catch (error: any) {
             progress.fail('Authentication failed');
             console.log('');
+
+            // Debug: log the full error
+            console.log('DEBUG ERROR:', JSON.stringify(error, null, 2));
 
             if (error.response) {
                 const status = error.response.status;

@@ -53,7 +53,7 @@ export interface PBConfig {
 
 const DEFAULT_CONFIG: PBConfig = {
     api: {
-        baseUrl: 'https://promptbrain-context-engine.vercel.app',
+        baseUrl: 'http://localhost:3000',
         timeout: 15000,
     },
     retry: {

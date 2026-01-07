@@ -39,3 +39,37 @@ coverage/
 # oclif
 oclif.manifest.json
 .vercel
+
+# Exclude non-PB CLI files
+backend-implementation/
+supabase/
+.homebrew/
+.promptbrain/
+.kiro/
+
+# Exclude test and debug files
+*.sql
+test-*.sh
+test-*.js
+debug-*.js
+interactive-*.js
+phase*-*.js
+run-tests.js
+store-api-key*.js
+view-*.js
+*-test-*.js
+
+# Exclude documentation files (keep only README.md)
+CHANGELOG.md
+COMPREHENSIVE_TEST_SUMMARY.md
+D2_D3_IMPLEMENTATION_SUMMARY.md
+INSTALLER_CHECKLIST.md
+LINK_COMMANDS*.md
+PHASE_*.md
+SECURITY_AUDIT_REPORT.md
+TESTING_GUIDE.md
+TEST_PLAN.md
+TODO_BEFORE_PUBLISH.md
+
+# Exclude HTML files
+*.html

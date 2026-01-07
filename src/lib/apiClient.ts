@@ -30,7 +30,7 @@ const createApiClient = async () => {
 
 // Initialize with default, will be updated when used
 export let apiClient = axios.create({
-    baseURL: 'https://promptbrain-context-engine.vercel.app',
+    baseURL: 'http://localhost:3000',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -454,15 +454,15 @@ export const devsyncApi = {
 // API Key API methods
 export const apiKeyApi = {
     create: async (): Promise<ApiKeyResponse> => {
-        return request('POST', '/auth/api-key');
+        return request('POST', '/api/auth/api-key');
     },
     
     list: async (): Promise<ApiKeyResponse[]> => {
-        return request('GET', '/auth/api-key');
+        return request('GET', '/api/auth/api-key');
     },
     
     revoke: async (id: string): Promise<void> => {
-        return request('DELETE', `/auth/api-key/${id}`);
+        return request('DELETE', `/api/auth/api-key/${id}`);
     }
 };
 
