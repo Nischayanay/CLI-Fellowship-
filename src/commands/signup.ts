@@ -117,9 +117,24 @@ export default class Signup extends Command {
             progress.fail('Signup failed');
             console.log('');
 
+            // Helper function to safely extract error message
+            const getErrorMessage = (err: any): string => {
+                if (typeof err === 'string') return err;
+                if (err?.message && typeof err.message === 'string') return err.message;
+                if (err?.error && typeof err.error === 'string') return err.error;
+                try {
+                    return JSON.stringify(err);
+                } catch {
+                    return String(err);
+                }
+            };
+
             if (error.response) {
-                const errorMsg = error.response.data?.error || error.response.data?.message || error.message;
                 const status = error.response.status;
+                const responseData = error.response.data;
+                
+                // Extract error message properly
+                let errorMsg = getErrorMessage(responseData) || getErrorMessage(error);
                 
                 if (status === 404) {
                     logger.error('Backend endpoint not found');
@@ -138,20 +153,18 @@ export default class Signup extends Command {
                 } else if (status === 400) {
                     logger.error(`Invalid input: ${errorMsg}`);
                 } else if (status >= 500) {
-                    logger.error('Server error. Please try again later.');
+                    logger.error(`Server error: ${errorMsg}`);
                 } else {
                     logger.error(`Signup failed: ${errorMsg}`);
                 }
             } else if (error.request) {
-                logger.error('Network error. Please check your connection.');
-            } else {
-                logger.error(`An unexpected error occurred: ${error.message || JSON.stringify(error)}`);
+                logger.error('Network error. Could not reach the server.');
+                console.log(colors.dim(`Check if the server is running at: ${apiClient.defaults.baseURL}`));
                 console.log('');
-                console.log(colors.dim('Debug info:'));
-                console.log(colors.dim(`Error type: ${error.constructor.name}`));
-                if (error.config?.url) {
-                    console.log(colors.dim(`URL: ${error.config.url}`));
-                }
+                ui.tip('Make sure the backend server is running');
+            } else {
+                const errorMsg = getErrorMessage(error);
+                logger.error(`An unexpected error occurred: ${errorMsg}`);
             }
             
             console.log('');

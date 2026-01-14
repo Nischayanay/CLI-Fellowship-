@@ -14,11 +14,16 @@ const CONNECTIVITY_CACHE_TTL = 30000; // 30 seconds
 // Connectivity state cache
 let connectivityCache: { isOnline: boolean; timestamp: number } | null = null;
 
+// Get base URL from environment or default
+const getBaseURL = (): string => {
+    return process.env.PB_API_URL || 'https://api.promptbrain.io';
+};
+
 // Create API client with dynamic configuration
 const createApiClient = async () => {
     const config = await configManager.load();
     // Prioritize environment variable for development
-    const baseURL = process.env.PB_API_URL || config.api.baseUrl;
+    const baseURL = getBaseURL();
     return axios.create({
         baseURL,
         headers: {
@@ -28,9 +33,9 @@ const createApiClient = async () => {
     });
 };
 
-// Initialize with default, will be updated when used
+// Initialize with environment variable or default
 export let apiClient = axios.create({
-    baseURL: 'http://localhost:3000',
+    baseURL: getBaseURL(),
     headers: {
         'Content-Type': 'application/json',
     },
@@ -41,7 +46,7 @@ export let apiClient = axios.create({
 export const updateApiClient = async () => {
     const config = await configManager.load();
     // Prioritize environment variable for development
-    const baseURL = process.env.PB_API_URL || config.api.baseUrl;
+    const baseURL = getBaseURL();
     
     // Update the existing client's config
     apiClient.defaults.baseURL = baseURL;
@@ -422,15 +427,15 @@ export interface DevsyncResponse {
 // Integration API methods
 export const integrationApi = {
     startLink: async (provider: string, cliSession: string): Promise<LinkStartResponse> => {
-        return request('POST', '/cli/link/start', {
-            provider,
-            cli_session: cliSession,
+        // Use provider-specific endpoints to match backend
+        return request('GET', `/cli/link/${provider}`, undefined, {
+            params: { cli_session: cliSession }
         });
     },
 
     listIntegrations: async (cliSession?: string): Promise<Integration[]> => {
         const params = cliSession ? { cli_session: cliSession } : {};
-        const response = await request('GET', '/integrations/list', undefined, { params });
+        const response = await request('GET', '/api/integrations', undefined, { params });
         // Backend returns {integrations: [...]} but we need just the array
         return (response as any).integrations || response;
     },

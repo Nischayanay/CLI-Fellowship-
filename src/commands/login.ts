@@ -72,15 +72,27 @@ export default class Login extends Command {
             progress.fail('Authentication failed');
             console.log('');
 
-            // Debug: log the full error
-            console.log('DEBUG ERROR:', JSON.stringify(error, null, 2));
+            // Helper function to safely extract error message
+            const getErrorMessage = (err: any): string => {
+                if (typeof err === 'string') return err;
+                if (err?.message && typeof err.message === 'string') return err.message;
+                if (err?.error && typeof err.error === 'string') return err.error;
+                try {
+                    return JSON.stringify(err);
+                } catch {
+                    return String(err);
+                }
+            };
 
             if (error.response) {
                 const status = error.response.status;
-                const errorMsg = error.response.data?.error || error.response.data?.message || error.message;
+                const responseData = error.response.data;
+                
+                // Extract error message properly
+                let errorMsg = getErrorMessage(responseData) || getErrorMessage(error);
                 
                 if (status === 401 || status === 400) {
-                    logger.error('Invalid email or password');
+                    logger.error(`Invalid email or password: ${errorMsg}`);
                     ui.tip('Double-check your credentials and try again');
                     console.log('');
                     ui.tip(`New user? Run: ${colors.primary('pb signup')}`);
@@ -88,14 +100,18 @@ export default class Login extends Command {
                     logger.error('Account not found');
                     ui.tip(`Create an account: ${colors.primary('pb signup')}`);
                 } else if (status >= 500) {
-                    logger.error('Server error. Please try again later.');
+                    logger.error(`Server error: ${errorMsg}`);
                 } else {
                     logger.error(`Login failed: ${errorMsg}`);
                 }
             } else if (error.request) {
-                logger.error('Network error. Please check your connection.');
+                logger.error('Network error. Could not reach the server.');
+                console.log(colors.dim(`Check if the server is running at: ${apiClient.defaults.baseURL}`));
+                console.log('');
+                ui.tip('Make sure the backend server is running');
             } else {
-                logger.error(`An unexpected error occurred: ${error.message}`);
+                const errorMsg = getErrorMessage(error);
+                logger.error(`An unexpected error occurred: ${errorMsg}`);
             }
             process.exit(1);
         }

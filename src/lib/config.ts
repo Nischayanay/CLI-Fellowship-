@@ -53,7 +53,7 @@ export interface PBConfig {
 
 const DEFAULT_CONFIG: PBConfig = {
     api: {
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'https://api.promptbrain.io',
         timeout: 15000,
     },
     retry: {

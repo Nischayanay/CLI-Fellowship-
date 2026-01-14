@@ -287,7 +287,7 @@ SUPABASE_ANON_KEY=your-anon-key-here  # Optional, for client-side if needed
 # API Configuration
 PORT=3000
 NODE_ENV=production
-ALLOWED_ORIGINS=https://promptbrain.io,http://localhost:3000
+ALLOWED_ORIGINS=https://promptbrain.io,https://api.promptbrain.io
 ```
 
 ---

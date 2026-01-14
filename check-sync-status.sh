@@ -1,7 +1,7 @@
 #!/bin/bash
 
-API_KEY="pb_239d7094b81e9f0e21d6023047380c0f9bd4b08f63cee3b6947fae8bcd67dc8aec60eeaf3eab4b7a"
-BASE_URL="http://localhost:3000"
+API_KEY="pb_4fa9848683a4cfca0a419de7371eb482003bdcb2b0a69acc6cad098769b7f10d1673c5b1e4c61969"
+BASE_URL="https://api.promptbrain.io"
 
 echo "🔍 Checking Notion Sync Status..."
 echo ""
